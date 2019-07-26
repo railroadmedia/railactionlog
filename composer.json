@@ -1,0 +1,22 @@
+{
+  "name": "railroad/railactionlog",
+  "type": "library",
+  "description": "Records actors and actions performed on resources",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": "~7.1",
+    "laravel/framework": "5.6.*",
+    "doctrine/dbal": "^2.5",
+    "railroad/doctrine": "^0.0",
+  },
+  "require-dev": {
+  },
+  "autoload": {
+    "psr-4": {
+      "Railroad\\ActionLog\\": "src"
+    }
+  },
+  "autoload-dev": {
+  }
+}
