@@ -36,6 +36,10 @@ class ActionLogServiceProvider extends ServiceProvider
                 __DIR__ . '/../../config/railactionlog.php' => config_path('railactionlog.php'),
             ]
         );
+
+        if (config('railactionlog.data_mode') == 'host') {
+            $this->loadMigrationsFrom(__DIR__ . '/../../migrations');
+        }
     }
 
     /**
@@ -94,7 +98,6 @@ class ActionLogServiceProvider extends ServiceProvider
         // event manager
         $eventManager = new EventManager();
         $eventManager->addEventSubscriber($timestampableListener);
-        $eventManager->addEventSubscriber($softDeletesListener);
 
         // orm config
         $ormConfiguration = new Configuration();
@@ -130,9 +133,6 @@ class ActionLogServiceProvider extends ServiceProvider
         }
 
         $entityManager = ActionLogEntityManager::create($databaseOptions, $ormConfiguration, $eventManager);
-
-        $entityManager->getFilters()
-            ->enable('soft-deleteable');
 
         if (config('railactionlog.enable_query_log')) {
             $logger = new EchoSQLLogger();
