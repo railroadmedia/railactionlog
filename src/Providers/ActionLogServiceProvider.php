@@ -16,8 +16,17 @@ use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Gedmo\DoctrineExtensions;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Railroad\ActionLog\Listeners\OrderEventListener;
+use Railroad\ActionLog\Listeners\Payments\SubscriptionPaymentFailedListener;
+use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionDeactivatedListener;
+use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionRenewedListener;
+use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionUpdatedListener;
 use Railroad\ActionLog\Managers\ActionLogEntityManager;
 use Railroad\Doctrine\TimestampableListener;
+use Railroad\Ecommerce\Events\Payments\SubscriptionPaymentFailed;
+use Railroad\Ecommerce\Events\Subscriptions\SubscriptionDeactivated;
+use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewed;
+use Railroad\Ecommerce\Events\Subscriptions\SubscriptionUpdated;
 use Redis;
 
 class ActionLogServiceProvider extends ServiceProvider
@@ -29,6 +38,13 @@ class ActionLogServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->listen = [
+            SubscriptionDeactivated::class => [SubscriptionDeactivatedListener::class],
+            SubscriptionRenewed::class => [SubscriptionRenewedListener::class],
+            SubscriptionUpdated::class => [SubscriptionUpdatedListener::class],
+            SubscriptionPaymentFailed:: => [SubscriptionPaymentFailedListener::class],
+        ];
+
         parent::boot();
 
         $this->publishes(
