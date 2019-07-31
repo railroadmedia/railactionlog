@@ -16,16 +16,23 @@ use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Gedmo\DoctrineExtensions;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Railroad\ActionLog\Listeners\OrderEventListener;
-use Railroad\ActionLog\Listeners\Payments\SubscriptionPaymentFailedListener;
+use Railroad\ActionLog\Listeners\MobileOrderEventListener;
+use Railroad\ActionLog\Listeners\Subscriptions\MobileSubscriptionCanceledListener;
+use Railroad\ActionLog\Listeners\Subscriptions\MobileSubscriptionRenewedListener;
+use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionCreatedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionDeactivatedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionRenewedListener;
+use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionRenewFailedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionUpdatedListener;
 use Railroad\ActionLog\Managers\ActionLogEntityManager;
 use Railroad\Doctrine\TimestampableListener;
-use Railroad\Ecommerce\Events\Payments\SubscriptionPaymentFailed;
+use Railroad\Ecommerce\Events\MobileOrderEvent;
+use Railroad\Ecommerce\Events\Subscriptions\MobileSubscriptionCanceled;
+use Railroad\Ecommerce\Events\Subscriptions\MobileSubscriptionRenewed;
+use Railroad\Ecommerce\Events\Subscriptions\SubscriptionCreated;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionDeactivated;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewed;
+use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewFailed;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionUpdated;
 use Redis;
 
@@ -39,10 +46,14 @@ class ActionLogServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->listen = [
-            SubscriptionDeactivated::class => [SubscriptionDeactivatedListener::class],
+            MobileSubscriptionCanceled::class => [MobileSubscriptionCanceledListener::class],
+            MobileSubscriptionRenewed::class => [MobileSubscriptionRenewedListener::class],
+            MobileOrderEvent::class => [MobileOrderEventListener::class],
+            SubscriptionCreated::class => [SubscriptionCreatedListener::class],
+            SubscriptionDeactivated::class => [SubscriptionDeactivatedListener::class], // todo - remove if not used
             SubscriptionRenewed::class => [SubscriptionRenewedListener::class],
+            SubscriptionRenewFailed::class => [SubscriptionRenewFailedListener::class],
             SubscriptionUpdated::class => [SubscriptionUpdatedListener::class],
-            SubscriptionPaymentFailed:: => [SubscriptionPaymentFailedListener::class],
         ];
 
         parent::boot();
