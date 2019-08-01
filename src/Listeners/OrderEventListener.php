@@ -63,9 +63,6 @@ class OrderEventListener
         if ($payment) {
             /** @var $payment Payment */
             $this->actionLogService->recordAction($brand, $actionName, $payment, $actor, $actorId, $actorRole);
-
-            $paymentMethod = $payment->getPaymentMethod();
-            $this->actionLogService->recordAction($brand, $actionName, $paymentMethod, $actor, $actorId, $actorRole);
         }
     }
 }

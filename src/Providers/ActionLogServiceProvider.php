@@ -17,6 +17,9 @@ use Doctrine\ORM\Mapping\UnderscoreNamingStrategy;
 use Gedmo\DoctrineExtensions;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Railroad\ActionLog\Listeners\MobileOrderEventListener;
+use Railroad\ActionLog\Listeners\OrderEventListener;
+use Railroad\ActionLog\Listeners\PaymentEventListener;
+use Railroad\ActionLog\Listeners\PaymentMethods\PaymentMethodCreatedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\MobileSubscriptionCanceledListener;
 use Railroad\ActionLog\Listeners\Subscriptions\MobileSubscriptionRenewedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionCreatedListener;
@@ -24,9 +27,13 @@ use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionDeactivatedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionRenewedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionRenewFailedListener;
 use Railroad\ActionLog\Listeners\Subscriptions\SubscriptionUpdatedListener;
+use Railroad\ActionLog\Listeners\UpdateOrderEventListener;
 use Railroad\ActionLog\Managers\ActionLogEntityManager;
 use Railroad\Doctrine\TimestampableListener;
 use Railroad\Ecommerce\Events\MobileOrderEvent;
+use Railroad\Ecommerce\Events\OrderEvent;
+use Railroad\Ecommerce\Events\PaymentEvent;
+use Railroad\ActionLog\Listeners\PaymentMethods\PaymentMethodCreated;
 use Railroad\Ecommerce\Events\Subscriptions\MobileSubscriptionCanceled;
 use Railroad\Ecommerce\Events\Subscriptions\MobileSubscriptionRenewed;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionCreated;
@@ -34,6 +41,7 @@ use Railroad\Ecommerce\Events\Subscriptions\SubscriptionDeactivated;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewed;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewFailed;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionUpdated;
+use Railroad\Ecommerce\Events\UpdateOrderEvent;
 use Redis;
 
 class ActionLogServiceProvider extends ServiceProvider
@@ -49,11 +57,15 @@ class ActionLogServiceProvider extends ServiceProvider
             MobileSubscriptionCanceled::class => [MobileSubscriptionCanceledListener::class],
             MobileSubscriptionRenewed::class => [MobileSubscriptionRenewedListener::class],
             MobileOrderEvent::class => [MobileOrderEventListener::class],
+            OrderEvent::class => [OrderEventListener::class],
+            PaymentEvent::class => [PaymentEventListener::class],
+            PaymentMethodCreated::class => [PaymentMethodCreatedListener::class],
             SubscriptionCreated::class => [SubscriptionCreatedListener::class],
             SubscriptionDeactivated::class => [SubscriptionDeactivatedListener::class], // todo - remove if not used
             SubscriptionRenewed::class => [SubscriptionRenewedListener::class],
             SubscriptionRenewFailed::class => [SubscriptionRenewFailedListener::class],
             SubscriptionUpdated::class => [SubscriptionUpdatedListener::class],
+            UpdateOrderEvent::class => [UpdateOrderEventListener::class],
         ];
 
         parent::boot();

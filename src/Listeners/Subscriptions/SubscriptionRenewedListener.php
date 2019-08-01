@@ -4,6 +4,7 @@ namespace Railroad\ActionLog\Listeners\Subscriptions;
 
 use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
+use Railroad\Ecommerce\Entities\Payment;
 use Railroad\Ecommerce\Entities\Subscription;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewed;
 
@@ -43,5 +44,21 @@ class SubscriptionRenewedListener
                         ActionLogService::ROLE_ADMIN;
 
         $this->actionLogService->recordAction($brand, Subscription::ACTION_RENEW, $subscription, $actor, $actorId, $actorRole);
+
+        $payment = $subscriptionRenewedEvent->getPayment();
+
+        if ($payment) {
+
+            /** @var $payment Payment */
+
+            $this->actionLogService->recordAction(
+                $brand,
+                ActionLogService::ACTION_CREATE,
+                $payment,
+                $actor,
+                $actorId,
+                $actorRole
+            );
+        }
     }
 }
