@@ -6,9 +6,9 @@ use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
 use Railroad\Ecommerce\Entities\Payment;
 use Railroad\Ecommerce\Entities\Subscription;
-use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewed;
+use Railroad\Ecommerce\Events\Subscriptions\UserSubscriptionRenewed;
 
-class SubscriptionRenewedListener
+class UserSubscriptionRenewedListener
 {
     /**
      * @var ActionLogService
@@ -24,17 +24,17 @@ class SubscriptionRenewedListener
     }
 
     /**
-     * @param SubscriptionRenewed $subscriptionRenewedEvent
+     * @param UserSubscriptionRenewed $userSubscriptionRenewed
      *
      * @throws Exception
      */
-    public function handle(SubscriptionRenewed $subscriptionRenewedEvent)
+    public function handle(UserSubscriptionRenewed $userSubscriptionRenewed)
     {
         /** @var $currentUser array */
         $currentUser = auth()->user();
 
         /** @var $subscription Subscription */
-        $subscription = $subscriptionRenewedEvent->getSubscription();
+        $subscription = $userSubscriptionRenewed->getSubscription();
 
         $brand = $subscription->getBrand();
         $actor = $currentUser['email'];
@@ -45,7 +45,7 @@ class SubscriptionRenewedListener
 
         $this->actionLogService->recordAction($brand, Subscription::ACTION_RENEW, $subscription, $actor, $actorId, $actorRole);
 
-        $payment = $subscriptionRenewedEvent->getPayment();
+        $payment = $userSubscriptionRenewed->getPayment();
 
         if ($payment) {
 

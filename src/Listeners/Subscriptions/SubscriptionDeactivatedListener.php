@@ -33,23 +33,10 @@ class SubscriptionDeactivatedListener
         /** @var $subscription Subscription */
         $subscription = $subscriptionDeactivatedEvent->getSubscription();
 
-        /** @var $currentUser array */
-        $currentUser = auth()->user();
-
-        $brand = $subscription->getBrand();
-        $actor = $currentUser['email'];
-        $actorId = $currentUser['id'];
-        $actorRole = $currentUser['id'] == $subscription->getUser()->getId() ?
-                        ActionLogService::ROLE_USER:
-                        ActionLogService::ROLE_ADMIN;
-
-        $this->actionLogService->recordAction(
-            $brand,
+        $this->actionLogService->recordCommandAction(
+            $subscription->getBrand(),
             Subscription::ACTION_DEACTIVATED,
-            $subscription,
-            $actor,
-            $actorId,
-            $actorRole
+            $subscription
         );
     }
 }

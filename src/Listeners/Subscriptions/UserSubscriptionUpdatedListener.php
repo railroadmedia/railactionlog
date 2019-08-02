@@ -5,9 +5,9 @@ namespace Railroad\ActionLog\Listeners\Subscriptions;
 use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
 use Railroad\Ecommerce\Entities\Subscription;
-use Railroad\Ecommerce\Events\Subscriptions\SubscriptionUpdated;
+use Railroad\Ecommerce\Events\Subscriptions\UserSubscriptionUpdated;
 
-class SubscriptionUpdatedListener
+class UserSubscriptionUpdatedListener
 {
     /**
      * @var ActionLogService
@@ -23,17 +23,17 @@ class SubscriptionUpdatedListener
     }
 
     /**
-     * @param SubscriptionUpdated $subscriptionUpdatedEvent
+     * @param UserSubscriptionUpdated $userSubscriptionUpdated
      *
      * @throws Exception
      */
-    public function handle(SubscriptionUpdated $subscriptionUpdatedEvent)
+    public function handle(UserSubscriptionUpdated $userSubscriptionUpdated)
     {
         /** @var $currentUser array */
         $currentUser = auth()->user();
 
         /** @var $subscription Subscription */
-        $subscription = $subscriptionUpdatedEvent->getNewSubscription();
+        $subscription = $userSubscriptionUpdated->getNewSubscription();
 
         $brand = $subscription->getBrand();
         $actor = $currentUser['email'];
