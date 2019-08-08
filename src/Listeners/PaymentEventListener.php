@@ -4,6 +4,7 @@ namespace Railroad\ActionLog\Listeners;
 
 use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
+use Railroad\Ecommerce\Contracts\UserProviderInterface;
 use Railroad\Ecommerce\Entities\Payment;
 use Railroad\Ecommerce\Entities\User;
 use Railroad\Ecommerce\Events\PaymentEvent;
@@ -16,11 +17,21 @@ class PaymentEventListener
     private $actionLogService;
 
     /**
-     * @param ActionLogService $actionLogService
+     * @var UserProviderInterface
      */
-    public function __construct(ActionLogService $actionLogService)
+    private $userProvider;
+
+    /**
+     * @param ActionLogService $actionLogService
+     * @param UserProviderInterface $userProvider
+     */
+    public function __construct(
+        ActionLogService $actionLogService,
+        UserProviderInterface $userProvider
+    )
     {
         $this->actionLogService = $actionLogService;
+        $this->userProvider = $userProvider;
     }
 
     /**
@@ -30,8 +41,8 @@ class PaymentEventListener
      */
     public function handle(PaymentEvent $paymentEvent)
     {
-        /** @var $currentUser array */
-        $currentUser = auth()->user();
+        /** @var $currentUser User */
+        $currentUser = $this->userProvider->getCurrentUser();
 
         /** @var $payment Payment */
         $payment = $paymentEvent->getPayment();
@@ -39,7 +50,7 @@ class PaymentEventListener
         /** @var $user User */
         $user = $paymentEvent->getUser();
 
-        $actorRole = $currentUser['id'] == $user->getId() ?
+        $actorRole = $currentUser->getId() == $user->getId() ?
                         ActionLogService::ROLE_USER:
                         ActionLogService::ROLE_ADMIN;
 
@@ -47,8 +58,8 @@ class PaymentEventListener
             $payment->getGatewayName(),
             ActionLogService::ACTION_CREATE,
             $payment,
-            $currentUser['email'],
-            $currentUser['id'],
+            $currentUser->getEmail(),
+            $currentUser->getId(),
             $actorRole
         );
     }

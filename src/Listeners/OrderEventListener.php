@@ -4,8 +4,10 @@ namespace Railroad\ActionLog\Listeners;
 
 use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
+use Railroad\Ecommerce\Contracts\UserProviderInterface;
 use Railroad\Ecommerce\Entities\Order;
 use Railroad\Ecommerce\Entities\Payment;
+use Railroad\Ecommerce\Entities\User;
 use Railroad\Ecommerce\Events\OrderEvent;
 
 class OrderEventListener
@@ -16,11 +18,21 @@ class OrderEventListener
     private $actionLogService;
 
     /**
-     * @param ActionLogService $actionLogService
+     * @var UserProviderInterface
      */
-    public function __construct(ActionLogService $actionLogService)
+    private $userProvider;
+
+    /**
+     * @param ActionLogService $actionLogService
+     * @param UserProviderInterface $userProvider
+     */
+    public function __construct(
+        ActionLogService $actionLogService,
+        UserProviderInterface $userProvider
+    )
     {
         $this->actionLogService = $actionLogService;
+        $this->userProvider = $userProvider;
     }
 
     /**
@@ -30,8 +42,8 @@ class OrderEventListener
      */
     public function handle(OrderEvent $orderEvent)
     {
-        /** @var $currentUser array */
-        $currentUser = auth()->user();
+        /** @var $currentUser User */
+        $currentUser = $this->userProvider->getCurrentUser();
 
         /** @var $order Order */
         $order = $orderEvent->getOrder();
@@ -47,10 +59,10 @@ class OrderEventListener
             $actorId = $customer->getId();
             $actorRole = ActionLogService::ROLE_CUSTOMER;
         } else {
-            $actor = $currentUser['email'];
-            $actorId = $currentUser['id'];
+            $actor = $currentUser->getEmail();
+            $actorId = $currentUser->getId();
 
-            $actorRole = $currentUser['id'] == $order->getUser()->getId() ?
+            $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
                             ActionLogService::ROLE_USER:
                             ActionLogService::ROLE_ADMIN;
         }

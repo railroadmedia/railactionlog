@@ -4,7 +4,9 @@ namespace Railroad\ActionLog\Listeners;
 
 use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
+use Railroad\Ecommerce\Contracts\UserProviderInterface;
 use Railroad\Ecommerce\Entities\Order;
+use Railroad\Ecommerce\Entities\User;
 use Railroad\Ecommerce\Events\UpdateOrderEvent;
 
 class UpdateOrderEventListener
@@ -15,11 +17,21 @@ class UpdateOrderEventListener
     private $actionLogService;
 
     /**
-     * @param ActionLogService $actionLogService
+     * @var UserProviderInterface
      */
-    public function __construct(ActionLogService $actionLogService)
+    private $userProvider;
+
+    /**
+     * @param ActionLogService $actionLogService
+     * @param UserProviderInterface $userProvider
+     */
+    public function __construct(
+        ActionLogService $actionLogService,
+        UserProviderInterface $userProvider
+    )
     {
         $this->actionLogService = $actionLogService;
+        $this->userProvider = $userProvider;
     }
 
     /**
@@ -29,13 +41,13 @@ class UpdateOrderEventListener
      */
     public function handle(UpdateOrderEvent $updateOrderEvent)
     {
-        /** @var $currentUser array */
-        $currentUser = auth()->user();
+        /** @var $currentUser User */
+        $currentUser = $this->userProvider->getCurrentUser();
 
         /** @var $order Order */
         $order = $updateOrderEvent->getOrder();
 
-        $actorRole = $currentUser['id'] == $order->getUser()->getId() ?
+        $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
                         ActionLogService::ROLE_USER:
                         ActionLogService::ROLE_ADMIN;
 
@@ -43,8 +55,8 @@ class UpdateOrderEventListener
             $order->getBrand(),
             ActionLogService::ACTION_UPDATE,
             $order,
-            $currentUser['email'],
-            $currentUser['id'],
+            $currentUser->getEmail(),
+            $currentUser->getId(),
             $actorRole
         );
     }

@@ -4,8 +4,10 @@ namespace Railroad\ActionLog\Listeners\Subscriptions;
 
 use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
+use Railroad\Ecommerce\Contracts\UserProviderInterface;
 use Railroad\Ecommerce\Entities\Payment;
 use Railroad\Ecommerce\Entities\Subscription;
+use Railroad\Ecommerce\Entities\User;
 use Railroad\Ecommerce\Events\Subscriptions\UserSubscriptionRenewed;
 
 class UserSubscriptionRenewedListener
@@ -16,11 +18,21 @@ class UserSubscriptionRenewedListener
     private $actionLogService;
 
     /**
-     * @param ActionLogService $actionLogService
+     * @var UserProviderInterface
      */
-    public function __construct(ActionLogService $actionLogService)
+    private $userProvider;
+
+    /**
+     * @param ActionLogService $actionLogService
+     * @param UserProviderInterface $userProvider
+     */
+    public function __construct(
+        ActionLogService $actionLogService,
+        UserProviderInterface $userProvider
+    )
     {
         $this->actionLogService = $actionLogService;
+        $this->userProvider = $userProvider;
     }
 
     /**
@@ -30,16 +42,16 @@ class UserSubscriptionRenewedListener
      */
     public function handle(UserSubscriptionRenewed $userSubscriptionRenewed)
     {
-        /** @var $currentUser array */
-        $currentUser = auth()->user();
+        /** @var $currentUser User */
+        $currentUser = $this->userProvider->getCurrentUser();
 
         /** @var $subscription Subscription */
         $subscription = $userSubscriptionRenewed->getSubscription();
 
         $brand = $subscription->getBrand();
-        $actor = $currentUser['email'];
-        $actorId = $currentUser['id'];
-        $actorRole = $currentUser['id'] == $subscription->getUser()->getId() ?
+        $actor = $currentUser->getEmail();
+        $actorId = $currentUser->getId();
+        $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
                         ActionLogService::ROLE_USER:
                         ActionLogService::ROLE_ADMIN;
 
