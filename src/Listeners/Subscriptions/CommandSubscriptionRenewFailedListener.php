@@ -53,11 +53,6 @@ class CommandSubscriptionRenewFailedListener
         $currentUser = $this->userProvider->getCurrentUser();
 
         $brand = $subscription->getBrand();
-        $actor = $currentUser->getEmail();
-        $actorId = $currentUser->getId();
-        $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
-                        ActionLogService::ROLE_USER:
-                        ActionLogService::ROLE_ADMIN;
 
         if ($subscription->getNote() == RenewalService::DEACTIVATION_MESSAGE &&
             $subscription->getIsActive() != $oldSubscriptionState->getIsActive()) {
