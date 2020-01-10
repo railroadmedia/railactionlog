@@ -62,9 +62,13 @@ class OrderEventListener
             $actor = $currentUser->getEmail();
             $actorId = $currentUser->getId();
 
-            $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
-                            ActionLogService::ROLE_USER:
-                            ActionLogService::ROLE_ADMIN;
+            if (!empty($order->getUser())) {
+                $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
+                    ActionLogService::ROLE_USER:
+                    ActionLogService::ROLE_ADMIN;
+            } else {
+                $actorRole = ActionLogService::ROLE_ADMIN;
+            }
         }
 
         $this->actionLogService->recordAction($brand, $actionName, $order, $actor, $actorId, $actorRole);

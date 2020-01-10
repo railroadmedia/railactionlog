@@ -47,10 +47,14 @@ class UpdateOrderEventListener
         /** @var $order Order */
         $order = $updateOrderEvent->getOrder();
 
-        $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
-                        ActionLogService::ROLE_USER:
-                        ActionLogService::ROLE_ADMIN;
-
+        if (!empty($order->getUser())) {
+            $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
+                ActionLogService::ROLE_USER:
+                ActionLogService::ROLE_ADMIN;
+        } else {
+            $actorRole = ActionLogService::ROLE_ADMIN;
+        }
+        
         $this->actionLogService->recordAction(
             $order->getBrand(),
             ActionLogService::ACTION_UPDATE,

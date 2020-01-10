@@ -50,9 +50,14 @@ class SubscriptionCreatedListener
         $brand = $subscription->getBrand();
         $actor = $currentUser->getEmail();
         $actorId = $currentUser->getId();
-        $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
-                        ActionLogService::ROLE_USER:
-                        ActionLogService::ROLE_ADMIN;
+
+        if (!empty($subscription->getUser())) {
+            $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
+                ActionLogService::ROLE_USER:
+                ActionLogService::ROLE_ADMIN;
+        } else {
+            $actorRole = ActionLogService::ROLE_ADMIN;
+        }
 
         $this->actionLogService->recordAction($brand, ActionLogService::ACTION_CREATE, $subscription, $actor, $actorId, $actorRole);
     }
