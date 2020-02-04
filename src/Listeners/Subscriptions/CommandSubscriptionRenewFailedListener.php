@@ -30,8 +30,7 @@ class CommandSubscriptionRenewFailedListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -43,38 +42,45 @@ class CommandSubscriptionRenewFailedListener
      */
     public function handle(CommandSubscriptionRenewFailed $commandSubscriptionRenewFailed)
     {
-        /** @var $subscription Subscription */
-        $subscription = $commandSubscriptionRenewFailed->getSubscription();
+        try {
 
-        /** @var $oldSubscriptionState Subscription */
-        $oldSubscriptionState = $commandSubscriptionRenewFailed->getOldSubscription();
+            /** @var $subscription Subscription */
+            $subscription = $commandSubscriptionRenewFailed->getSubscription();
 
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+            /** @var $oldSubscriptionState Subscription */
+            $oldSubscriptionState = $commandSubscriptionRenewFailed->getOldSubscription();
 
-        $brand = $subscription->getBrand();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        if ($subscription->getNote() == RenewalService::DEACTIVATION_MESSAGE &&
-            $subscription->getIsActive() != $oldSubscriptionState->getIsActive()) {
+            $brand = $subscription->getBrand();
 
-            $this->actionLogService->recordCommandAction(
-                $brand,
-                Subscription::ACTION_DEACTIVATED,
-                $subscription
-            );
-        }
+            if ($subscription->getNote() == RenewalService::DEACTIVATION_MESSAGE &&
+                $subscription->getIsActive() != $oldSubscriptionState->getIsActive()) {
 
-        $payment = $commandSubscriptionRenewFailed->getPayment();
+                $this->actionLogService->recordCommandAction(
+                    $brand,
+                    Subscription::ACTION_DEACTIVATED,
+                    $subscription
+                );
+            }
 
-        if ($payment) {
+            $payment = $commandSubscriptionRenewFailed->getPayment();
 
-            /** @var $payment Payment */
+            if ($payment) {
 
-            $this->actionLogService->recordCommandAction(
-                $brand,
-                Payment::ACTION_FAILED_RENEW,
-                $payment
-            );
+                /** @var $payment Payment */
+
+                $this->actionLogService->recordCommandAction(
+                    $brand,
+                    Payment::ACTION_FAILED_RENEW,
+                    $payment
+                );
+            }
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
     }
 }

@@ -29,8 +29,7 @@ class UserSubscriptionRenewedListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -42,40 +41,52 @@ class UserSubscriptionRenewedListener
      */
     public function handle(UserSubscriptionRenewed $userSubscriptionRenewed)
     {
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+        try {
 
-        /** @var $subscription Subscription */
-        $subscription = $userSubscriptionRenewed->getSubscription();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        $brand = $subscription->getBrand();
-        $actor = $currentUser->getEmail();
-        $actorId = $currentUser->getId();
+            if (empty($currentUser)) {
+                return;
+            }
 
-        if (!empty($subscription->getUser())) {
-            $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
-                ActionLogService::ROLE_USER:
-                ActionLogService::ROLE_ADMIN;
-        } else {
-            $actorRole = ActionLogService::ROLE_ADMIN;
-        }
+            /** @var $subscription Subscription */
+            $subscription = $userSubscriptionRenewed->getSubscription();
 
-        $this->actionLogService->recordAction($brand, Subscription::ACTION_RENEW, $subscription, $actor, $actorId, $actorRole);
+            $brand = $subscription->getBrand();
+            $actor = $currentUser->getEmail();
+            $actorId = $currentUser->getId();
 
-        $payment = $userSubscriptionRenewed->getPayment();
+            if (!empty($subscription->getUser())) {
+                $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
+                    ActionLogService::ROLE_USER :
+                    ActionLogService::ROLE_ADMIN;
+            } else {
+                $actorRole = ActionLogService::ROLE_ADMIN;
+            }
 
-        if ($payment) {
+            $this->actionLogService->recordAction($brand, Subscription::ACTION_RENEW, $subscription, $actor, $actorId,
+                $actorRole);
 
-            /** @var $payment Payment */
+            $payment = $userSubscriptionRenewed->getPayment();
 
-            $this->actionLogService->recordAction(
-                $brand,
-                ActionLogService::ACTION_CREATE,
-                $payment,
-                $actor,
-                $actorId,
-                $actorRole
-            );
+            if ($payment) {
+
+                /** @var $payment Payment */
+
+                $this->actionLogService->recordAction(
+                    $brand,
+                    ActionLogService::ACTION_CREATE,
+                    $payment,
+                    $actor,
+                    $actorId,
+                    $actorRole
+                );
+            }
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
     }
 }

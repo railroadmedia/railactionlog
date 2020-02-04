@@ -28,8 +28,7 @@ class UpdateOrderEventListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -41,27 +40,38 @@ class UpdateOrderEventListener
      */
     public function handle(UpdateOrderEvent $updateOrderEvent)
     {
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+        try {
 
-        /** @var $order Order */
-        $order = $updateOrderEvent->getOrder();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        if (!empty($order->getUser())) {
-            $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
-                ActionLogService::ROLE_USER:
-                ActionLogService::ROLE_ADMIN;
-        } else {
-            $actorRole = ActionLogService::ROLE_ADMIN;
+            if (empty($currentUser)) {
+                return;
+            }
+
+            /** @var $order Order */
+            $order = $updateOrderEvent->getOrder();
+
+            if (!empty($order->getUser())) {
+                $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
+                    ActionLogService::ROLE_USER :
+                    ActionLogService::ROLE_ADMIN;
+            } else {
+                $actorRole = ActionLogService::ROLE_ADMIN;
+            }
+
+            $this->actionLogService->recordAction(
+                $order->getBrand(),
+                ActionLogService::ACTION_UPDATE,
+                $order,
+                $currentUser->getEmail(),
+                $currentUser->getId(),
+                $actorRole
+            );
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
-        
-        $this->actionLogService->recordAction(
-            $order->getBrand(),
-            ActionLogService::ACTION_UPDATE,
-            $order,
-            $currentUser->getEmail(),
-            $currentUser->getId(),
-            $actorRole
-        );
     }
 }

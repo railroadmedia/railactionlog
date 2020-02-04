@@ -28,8 +28,7 @@ class RefundEventListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -41,26 +40,37 @@ class RefundEventListener
      */
     public function handle(RefundEvent $refundEvent)
     {
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+        try {
 
-        /** @var $refund Refund */
-        $refund = $refundEvent->getRefund();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        /** @var $user User */
-        $user = $refundEvent->getUser();
+            if (empty($currentUser)) {
+                return;
+            }
 
-        $actorRole = $currentUser->getId() == $user->getId() ?
-                        ActionLogService::ROLE_USER:
-                        ActionLogService::ROLE_ADMIN;
+            /** @var $refund Refund */
+            $refund = $refundEvent->getRefund();
 
-        $this->actionLogService->recordAction(
-            $refund->getPayment()->getGatewayName(),
-            ActionLogService::ACTION_CREATE,
-            $refund,
-            $currentUser->getEmail(),
-            $currentUser->getId(),
-            $actorRole
-        );
+            /** @var $user User */
+            $user = $refundEvent->getUser();
+
+            $actorRole = $currentUser->getId() == $user->getId() ?
+                ActionLogService::ROLE_USER :
+                ActionLogService::ROLE_ADMIN;
+
+            $this->actionLogService->recordAction(
+                $refund->getPayment()->getGatewayName(),
+                ActionLogService::ACTION_CREATE,
+                $refund,
+                $currentUser->getEmail(),
+                $currentUser->getId(),
+                $actorRole
+            );
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
+        }
     }
 }

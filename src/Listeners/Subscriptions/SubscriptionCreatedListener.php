@@ -28,8 +28,7 @@ class SubscriptionCreatedListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -41,24 +40,36 @@ class SubscriptionCreatedListener
      */
     public function handle(SubscriptionCreated $subscriptionCreatedEvent)
     {
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+        try {
 
-        /** @var $subscription Subscription */
-        $subscription = $subscriptionCreatedEvent->getSubscription();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        $brand = $subscription->getBrand();
-        $actor = $currentUser->getEmail();
-        $actorId = $currentUser->getId();
+            if (empty($currentUser)) {
+                return;
+            }
 
-        if (!empty($subscription->getUser())) {
-            $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
-                ActionLogService::ROLE_USER:
-                ActionLogService::ROLE_ADMIN;
-        } else {
-            $actorRole = ActionLogService::ROLE_ADMIN;
+            /** @var $subscription Subscription */
+            $subscription = $subscriptionCreatedEvent->getSubscription();
+
+            $brand = $subscription->getBrand();
+            $actor = $currentUser->getEmail();
+            $actorId = $currentUser->getId();
+
+            if (!empty($subscription->getUser())) {
+                $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
+                    ActionLogService::ROLE_USER :
+                    ActionLogService::ROLE_ADMIN;
+            } else {
+                $actorRole = ActionLogService::ROLE_ADMIN;
+            }
+
+            $this->actionLogService->recordAction($brand, ActionLogService::ACTION_CREATE, $subscription, $actor,
+                $actorId, $actorRole);
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
-
-        $this->actionLogService->recordAction($brand, ActionLogService::ACTION_CREATE, $subscription, $actor, $actorId, $actorRole);
     }
 }

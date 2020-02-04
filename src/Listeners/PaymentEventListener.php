@@ -28,8 +28,7 @@ class PaymentEventListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -41,26 +40,37 @@ class PaymentEventListener
      */
     public function handle(PaymentEvent $paymentEvent)
     {
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+        try {
 
-        /** @var $payment Payment */
-        $payment = $paymentEvent->getPayment();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        /** @var $user User */
-        $user = $paymentEvent->getUser();
+            if (empty($currentUser)) {
+                return;
+            }
 
-        $actorRole = $currentUser->getId() == $user->getId() ?
-                        ActionLogService::ROLE_USER:
-                        ActionLogService::ROLE_ADMIN;
+            /** @var $payment Payment */
+            $payment = $paymentEvent->getPayment();
 
-        $this->actionLogService->recordAction(
-            $payment->getGatewayName(),
-            ActionLogService::ACTION_CREATE,
-            $payment,
-            $currentUser->getEmail(),
-            $currentUser->getId(),
-            $actorRole
-        );
+            /** @var $user User */
+            $user = $paymentEvent->getUser();
+
+            $actorRole = $currentUser->getId() == $user->getId() ?
+                ActionLogService::ROLE_USER :
+                ActionLogService::ROLE_ADMIN;
+
+            $this->actionLogService->recordAction(
+                $payment->getGatewayName(),
+                ActionLogService::ACTION_CREATE,
+                $payment,
+                $currentUser->getEmail(),
+                $currentUser->getId(),
+                $actorRole
+            );
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
+        }
     }
 }

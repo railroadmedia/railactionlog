@@ -30,38 +30,45 @@ class MobileSubscriptionRenewedListener
      */
     public function handle(MobileSubscriptionRenewed $mobileSubscriptionRenewedEvent)
     {
-        /** @var $payment Payment */
-        $payment = $mobileSubscriptionRenewedEvent->getPayment();
+        try {
 
-        /** @var $subscription Subscription */
-        $subscription = $mobileSubscriptionRenewedEvent->getSubscription();
+            /** @var $payment Payment */
+            $payment = $mobileSubscriptionRenewedEvent->getPayment();
 
-        $brand = $subscription->getBrand();
+            /** @var $subscription Subscription */
+            $subscription = $mobileSubscriptionRenewedEvent->getSubscription();
 
-        if ($mobileSubscriptionRenewedEvent->getActor() == MobileSubscriptionRenewed::ACTOR_SYSTEM) {
-            $this->actionLogService->recordSystemAction(
-                $brand,
-                ActionLogService::ACTION_CREATE,
-                $payment
-            );
+            $brand = $subscription->getBrand();
 
-            $this->actionLogService->recordSystemAction(
-                $brand,
-                Subscription::ACTION_RENEW,
-                $subscription
-            );
-        } else {
-            $this->actionLogService->recordCommandAction(
-                $brand,
-                ActionLogService::ACTION_CREATE,
-                $payment
-            );
+            if ($mobileSubscriptionRenewedEvent->getActor() == MobileSubscriptionRenewed::ACTOR_SYSTEM) {
+                $this->actionLogService->recordSystemAction(
+                    $brand,
+                    ActionLogService::ACTION_CREATE,
+                    $payment
+                );
 
-            $this->actionLogService->recordCommandAction(
-                $brand,
-                Subscription::ACTION_RENEW,
-                $subscription
-            );
+                $this->actionLogService->recordSystemAction(
+                    $brand,
+                    Subscription::ACTION_RENEW,
+                    $subscription
+                );
+            } else {
+                $this->actionLogService->recordCommandAction(
+                    $brand,
+                    ActionLogService::ACTION_CREATE,
+                    $payment
+                );
+
+                $this->actionLogService->recordCommandAction(
+                    $brand,
+                    Subscription::ACTION_RENEW,
+                    $subscription
+                );
+            }
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
     }
 }

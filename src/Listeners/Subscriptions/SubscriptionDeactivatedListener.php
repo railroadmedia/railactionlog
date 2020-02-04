@@ -6,7 +6,6 @@ use Exception;
 use Railroad\ActionLog\Services\ActionLogService;
 use Railroad\Ecommerce\Entities\Subscription;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionDeactivated;
-use Railroad\Ecommerce\Services\RenewalService;
 
 class SubscriptionDeactivatedListener
 {
@@ -30,13 +29,20 @@ class SubscriptionDeactivatedListener
      */
     public function handle(SubscriptionDeactivated $subscriptionDeactivatedEvent)
     {
-        /** @var $subscription Subscription */
-        $subscription = $subscriptionDeactivatedEvent->getSubscription();
+        try {
 
-        $this->actionLogService->recordCommandAction(
-            $subscription->getBrand(),
-            Subscription::ACTION_DEACTIVATED,
-            $subscription
-        );
+            /** @var $subscription Subscription */
+            $subscription = $subscriptionDeactivatedEvent->getSubscription();
+
+            $this->actionLogService->recordCommandAction(
+                $subscription->getBrand(),
+                Subscription::ACTION_DEACTIVATED,
+                $subscription
+            );
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
+        }
     }
 }

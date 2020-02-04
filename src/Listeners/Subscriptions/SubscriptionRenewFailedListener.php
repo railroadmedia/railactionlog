@@ -30,8 +30,7 @@ class SubscriptionRenewFailedListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -43,54 +42,65 @@ class SubscriptionRenewFailedListener
      */
     public function handle(SubscriptionRenewFailed $subscriptionRenewFailedEvent)
     {
-        /** @var $subscription Subscription */
-        $subscription = $subscriptionRenewFailedEvent->getSubscription();
+        try {
 
-        /** @var $oldSubscriptionState Subscription */
-        $oldSubscriptionState = $subscriptionRenewFailedEvent->getOldSubscription();
+            /** @var $subscription Subscription */
+            $subscription = $subscriptionRenewFailedEvent->getSubscription();
 
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+            /** @var $oldSubscriptionState Subscription */
+            $oldSubscriptionState = $subscriptionRenewFailedEvent->getOldSubscription();
 
-        $brand = $subscription->getBrand();
-        $actor = $currentUser->getEmail();
-        $actorId = $currentUser->getId();
-        
-        if (!empty($subscription->getUser())) {
-            $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
-                ActionLogService::ROLE_USER:
-                ActionLogService::ROLE_ADMIN;
-        } else {
-            $actorRole = ActionLogService::ROLE_ADMIN;
-        }
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        if ($subscription->getNote() == RenewalService::DEACTIVATION_MESSAGE &&
-            $subscription->getIsActive() != $oldSubscriptionState->getIsActive()) {
+            if (empty($currentUser)) {
+                return;
+            }
 
-            $this->actionLogService->recordAction(
-                $brand,
-                Subscription::ACTION_DEACTIVATED,
-                $subscription,
-                $actor,
-                $actorId,
-                $actorRole
-            );
-        }
+            $brand = $subscription->getBrand();
+            $actor = $currentUser->getEmail();
+            $actorId = $currentUser->getId();
 
-        $payment = $subscriptionRenewFailedEvent->getPayment();
+            if (!empty($subscription->getUser())) {
+                $actorRole = $currentUser->getId() == $subscription->getUser()->getId() ?
+                    ActionLogService::ROLE_USER :
+                    ActionLogService::ROLE_ADMIN;
+            } else {
+                $actorRole = ActionLogService::ROLE_ADMIN;
+            }
 
-        if ($payment) {
+            if ($subscription->getNote() == RenewalService::DEACTIVATION_MESSAGE &&
+                $subscription->getIsActive() != $oldSubscriptionState->getIsActive()) {
 
-            /** @var $payment Payment */
+                $this->actionLogService->recordAction(
+                    $brand,
+                    Subscription::ACTION_DEACTIVATED,
+                    $subscription,
+                    $actor,
+                    $actorId,
+                    $actorRole
+                );
+            }
 
-            $this->actionLogService->recordAction(
-                $brand,
-                Payment::ACTION_FAILED_RENEW,
-                $payment,
-                $actor,
-                $actorId,
-                $actorRole
-            );
+            $payment = $subscriptionRenewFailedEvent->getPayment();
+
+            if ($payment) {
+
+                /** @var $payment Payment */
+
+                $this->actionLogService->recordAction(
+                    $brand,
+                    Payment::ACTION_FAILED_RENEW,
+                    $payment,
+                    $actor,
+                    $actorId,
+                    $actorRole
+                );
+            }
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
     }
 }

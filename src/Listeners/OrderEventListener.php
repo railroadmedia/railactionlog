@@ -29,8 +29,7 @@ class OrderEventListener
     public function __construct(
         ActionLogService $actionLogService,
         UserProviderInterface $userProvider
-    )
-    {
+    ) {
         $this->actionLogService = $actionLogService;
         $this->userProvider = $userProvider;
     }
@@ -42,43 +41,50 @@ class OrderEventListener
      */
     public function handle(OrderEvent $orderEvent)
     {
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+        try {
 
-        /** @var $order Order */
-        $order = $orderEvent->getOrder();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        $actionName = ActionLogService::ACTION_CREATE;
-        $brand = $order->getBrand();
-        $actor = $actorId = $actorRole = null;
+            /** @var $order Order */
+            $order = $orderEvent->getOrder();
 
-        if (empty($currentUser)) {
-            $customer = $order->getCustomer();
+            $actionName = ActionLogService::ACTION_CREATE;
+            $brand = $order->getBrand();
+            $actor = $actorId = $actorRole = null;
 
-            $actor = $customer->getEmail();
-            $actorId = $customer->getId();
-            $actorRole = ActionLogService::ROLE_CUSTOMER;
-        } else {
-            $actor = $currentUser->getEmail();
-            $actorId = $currentUser->getId();
+            if (empty($currentUser)) {
+                $customer = $order->getCustomer();
 
-            if (!empty($order->getUser())) {
-                $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
-                    ActionLogService::ROLE_USER:
-                    ActionLogService::ROLE_ADMIN;
+                $actor = $customer->getEmail();
+                $actorId = $customer->getId();
+                $actorRole = ActionLogService::ROLE_CUSTOMER;
             } else {
-                $actorRole = ActionLogService::ROLE_ADMIN;
+                $actor = $currentUser->getEmail();
+                $actorId = $currentUser->getId();
+
+                if (!empty($order->getUser())) {
+                    $actorRole = $currentUser->getId() == $order->getUser()->getId() ?
+                        ActionLogService::ROLE_USER :
+                        ActionLogService::ROLE_ADMIN;
+                } else {
+                    $actorRole = ActionLogService::ROLE_ADMIN;
+                }
             }
-        }
 
-        $this->actionLogService->recordAction($brand, $actionName, $order, $actor, $actorId, $actorRole);
+            $this->actionLogService->recordAction($brand, $actionName, $order, $actor, $actorId, $actorRole);
 
-        
-        $payment = $orderEvent->getPayment();
 
-        if ($payment) {
-            /** @var $payment Payment */
-            $this->actionLogService->recordAction($brand, $actionName, $payment, $actor, $actorId, $actorRole);
+            $payment = $orderEvent->getPayment();
+
+            if ($payment) {
+                /** @var $payment Payment */
+                $this->actionLogService->recordAction($brand, $actionName, $payment, $actor, $actorId, $actorRole);
+            }
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
     }
 }

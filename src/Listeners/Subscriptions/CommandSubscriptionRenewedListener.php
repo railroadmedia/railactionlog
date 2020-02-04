@@ -30,24 +30,31 @@ class CommandSubscriptionRenewedListener
      */
     public function handle(CommandSubscriptionRenewed $commandSubscriptionRenewed)
     {
-        /** @var $payment Payment */
-        $payment = $commandSubscriptionRenewed->getPayment();
+        try {
 
-        /** @var $subscription Subscription */
-        $subscription = $commandSubscriptionRenewed->getSubscription();
+            /** @var $payment Payment */
+            $payment = $commandSubscriptionRenewed->getPayment();
 
-        $brand = $subscription->getBrand();
+            /** @var $subscription Subscription */
+            $subscription = $commandSubscriptionRenewed->getSubscription();
 
-        $this->actionLogService->recordSystemAction(
-            $brand,
-            ActionLogService::ACTION_CREATE,
-            $payment
-        );
+            $brand = $subscription->getBrand();
 
-        $this->actionLogService->recordCommandAction(
-            $brand,
-            Subscription::ACTION_RENEW,
-            $subscription
-        );
+            $this->actionLogService->recordSystemAction(
+                $brand,
+                ActionLogService::ACTION_CREATE,
+                $payment
+            );
+
+            $this->actionLogService->recordCommandAction(
+                $brand,
+                Subscription::ACTION_RENEW,
+                $subscription
+            );
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
+        }
     }
 }

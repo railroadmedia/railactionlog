@@ -31,23 +31,39 @@ class MobileOrderEventListener
      */
     public function handle(MobileOrderEvent $mobileOrderEvent)
     {
-        /** @var $order Order */
-        $order = $mobileOrderEvent->getOrder();
+        try {
 
-        /** @var $subscription Subscription */
-        $subscription = $mobileOrderEvent->getSubscription();
+            /** @var $order Order */
+            $order = $mobileOrderEvent->getOrder();
 
-        $actionName = ActionLogService::ACTION_CREATE;
-        $brand = $order->getBrand();
+            /** @var $subscription Subscription */
+            $subscription = $mobileOrderEvent->getSubscription();
 
-        $this->actionLogService->recordSystemAction($brand, $actionName, $order);
-        $this->actionLogService->recordSystemAction($brand, $actionName, $subscription);
-        
-        $payment = $mobileOrderEvent->getPayment();
+            $actionName = ActionLogService::ACTION_CREATE;
 
-        if ($payment) {
-            /** @var $payment Payment */
-            $this->actionLogService->recordSystemAction($brand, $actionName, $payment);
+            if (!empty($order)) {
+                $brand = $order->getBrand();
+            } elseif (!empty($order)) {
+                $brand = $subscription->getBrand();
+            }
+
+            if (empty($brand)) {
+                return;
+            }
+
+            $this->actionLogService->recordSystemAction($brand, $actionName, $order);
+            $this->actionLogService->recordSystemAction($brand, $actionName, $subscription);
+
+            $payment = $mobileOrderEvent->getPayment();
+
+            if ($payment) {
+                /** @var $payment Payment */
+                $this->actionLogService->recordSystemAction($brand, $actionName, $payment);
+            }
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
         }
     }
 }

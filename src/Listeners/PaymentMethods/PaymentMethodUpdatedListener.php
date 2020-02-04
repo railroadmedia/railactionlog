@@ -42,29 +42,40 @@ class PaymentMethodUpdatedListener
      */
     public function handle(PaymentMethodUpdated $paymentMethodUpdated)
     {
-        /** @var $currentUser User */
-        $currentUser = $this->userProvider->getCurrentUser();
+        try {
 
-        /** @var $paymentMethod PaymentMethod */
-        $paymentMethod = $paymentMethodUpdated->getNewPaymentMethod();
+            /** @var $currentUser User */
+            $currentUser = $this->userProvider->getCurrentUser();
 
-        /** @var $user IdentifiableInterface */
-        $user = $paymentMethodUpdated->getUser();
+            if (empty($currentUser)) {
+                return;
+            }
 
-        $brand = $paymentMethod->getBillingAddress()->getBrand();
-        $actor = $currentUser->getEmail();
-        $actorId = $currentUser->getId();
-        $actorRole = $currentUser->getId() == $user->getId() ?
-                        ActionLogService::ROLE_USER:
-                        ActionLogService::ROLE_ADMIN;
+            /** @var $paymentMethod PaymentMethod */
+            $paymentMethod = $paymentMethodUpdated->getNewPaymentMethod();
 
-        $this->actionLogService->recordAction(
-            $brand,
-            ActionLogService::ACTION_UPDATE,
-            $paymentMethod,
-            $actor,
-            $actorId,
-            $actorRole
-        );
+            /** @var $user IdentifiableInterface */
+            $user = $paymentMethodUpdated->getUser();
+
+            $brand = $paymentMethod->getBillingAddress()->getBrand();
+            $actor = $currentUser->getEmail();
+            $actorId = $currentUser->getId();
+            $actorRole = $currentUser->getId() == $user->getId() ?
+                ActionLogService::ROLE_USER:
+                ActionLogService::ROLE_ADMIN;
+
+            $this->actionLogService->recordAction(
+                $brand,
+                ActionLogService::ACTION_UPDATE,
+                $paymentMethod,
+                $actor,
+                $actorId,
+                $actorRole
+            );
+
+        } catch (\Throwable $throwable) {
+            error_log('Railactionlog ERROR --------------------');
+            error_log($throwable);
+        }
     }
 }
