@@ -9,7 +9,7 @@ use Railroad\Ecommerce\Entities\Payment;
 use Railroad\Ecommerce\Entities\Subscription;
 use Railroad\Ecommerce\Entities\User;
 use Railroad\Ecommerce\Events\Subscriptions\CommandSubscriptionRenewFailed;
-use Railroad\Ecommerce\Services\RenewalService;
+use Railroad\Ecommerce\Services\SubscriptionService;
 
 class CommandSubscriptionRenewFailedListener
 {
@@ -55,7 +55,7 @@ class CommandSubscriptionRenewFailedListener
 
             $brand = $subscription->getBrand();
 
-            if ($subscription->getNote() == RenewalService::DEACTIVATION_MESSAGE &&
+            if ($subscription->getNote() == SubscriptionService::DEACTIVATION_MESSAGE &&
                 $subscription->getIsActive() != $oldSubscriptionState->getIsActive()) {
 
                 $this->actionLogService->recordCommandAction(

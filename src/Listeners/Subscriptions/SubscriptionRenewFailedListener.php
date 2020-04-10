@@ -9,7 +9,7 @@ use Railroad\Ecommerce\Entities\Payment;
 use Railroad\Ecommerce\Entities\Subscription;
 use Railroad\Ecommerce\Entities\User;
 use Railroad\Ecommerce\Events\Subscriptions\SubscriptionRenewFailed;
-use Railroad\Ecommerce\Services\RenewalService;
+use Railroad\Ecommerce\Services\SubscriptionService;
 
 class SubscriptionRenewFailedListener
 {
@@ -69,7 +69,7 @@ class SubscriptionRenewFailedListener
                 $actorRole = ActionLogService::ROLE_ADMIN;
             }
 
-            if ($subscription->getNote() == RenewalService::DEACTIVATION_MESSAGE &&
+            if ($subscription->getNote() == SubscriptionService::DEACTIVATION_MESSAGE &&
                 $subscription->getIsActive() != $oldSubscriptionState->getIsActive()) {
 
                 $this->actionLogService->recordAction(
