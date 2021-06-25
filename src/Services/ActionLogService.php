@@ -84,8 +84,8 @@ class ActionLogService
         $actionLog = $this->createActionLogEntity();
 
         $actionLog->setBrand($brand);
-        $actionLog->setResourceName(get_class($resource));
-        $actionLog->setResourceId($resource->getId());
+        $actionLog->setResourceName(is_object($resource) ? get_class($resource) : '');
+        $actionLog->setResourceId(is_object($resource) ? $resource->getId() : 0);
         $actionLog->setActionName($actionName);
         $actionLog->setActor(self::ACTOR_SYSTEM);
         $actionLog->setActorRole(self::ROLE_SYSTEM);

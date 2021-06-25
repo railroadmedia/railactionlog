@@ -43,7 +43,7 @@ class MobileOrderEventListener
 
             if (!empty($order)) {
                 $brand = $order->getBrand();
-            } elseif (!empty($order)) {
+            } elseif (!empty($subscription)) {
                 $brand = $subscription->getBrand();
             }
 

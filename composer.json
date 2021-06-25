@@ -8,7 +8,7 @@
     "php": "~7.1",
     "laravel/framework": "5.6.*",
     "doctrine/dbal": "^2.5",
-    "railroad/doctrine": "^0.0"
+    "railroad/doctrine": "1.0.*"
   },
   "require-dev": {
   },
